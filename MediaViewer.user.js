@@ -2,7 +2,7 @@
 // @name            MediaViewer
 // @namespace       mahadi22
 // @author          mahadi22
-// @version         0.7.1
+// @version         0.8.3
 // @description     Shows larger version of image, also support HTML5 video.
 // @homepage        https://github.com/Tanakar65/MediaViewer
 // @downloadURL     https://github.com/Tanakar65/MediaViewer/raw/main/MediaViewer.user.js
@@ -31,7 +31,6 @@ function fixCfg(s, save) {
 		start: 'auto',
 		zoom: 'context',
 		center: false,
-		cursor: false,
 		imgtab: false,
 		close: true,
 		preload: false,
@@ -72,7 +71,8 @@ function loadHosts() {
 		{r:/de?pic\.me\/[0-9a-z]{8,}/, q:'#pic'},
 		{r:/deviantart\.com\/art\//, s:function(m, node) { return /\b(film|lit)/.test(node.className) || /in Flash/.test(node.title) ? '' : m.input; }, q:['#download-button[href*=".jpg"], #download-button[href*=".gif"], #download-button[href*=".png"], #gmi-ResViewSizer_fullimg', 'img.dev-content-full']},
 		{r:/disqus\.com/, s:''},
-		{r:/dropbox\.com\/sh?\/.+\.(jpe?g|gif|png)/i, q:'#download_button_link'},
+		{r:/dropbox\.com\/sh?\/.+\.(jpe?g|gif|png)/i, q:function(text, doc) { var i = qs('img.absolute-center', doc); return i ? i.src.replace(/(size_mode)=\d+/, '$1=5') : false; }},
+		{d:'dropbox.com', r:/(.+?&size_mode)=\d+(.*)/, s:'$1=5$2'},
 		{r:/ebay\.[^\/]+\/itm\//, q:function(text) { return text.match(/https?:\/\/i\.ebayimg\.com\/[^\.]+\.JPG/i)[0].replace(/~~60_\d+/, '~~60_57'); }},
 		{r:/i.ebayimg.com/, s:function(m, node) { if(qs('.zoom_trigger_mask', node.parentNode)) return ''; return m.input.replace(/~~60_\d+/, '~~60_57'); }},
 		{r:/fastpic\.ru\/view\//, q:'#picContainer img'},
@@ -86,7 +86,7 @@ function loadHosts() {
 		{r:/flickr\.com\/photos\/.+\/sizes\//, q:'#allsizes-photo > img'},
 		{r:/gallery(nova|sense)\.se\/site\/v\//, q:'a[href*="/upload/"]'},
 		{r:/gifbin\.com\/.+\.gif$/, xhr:true},
-		{r:/(gfycat\.com\/)(iframe\/)?([a-z]+)/i, s:'https://$1$3', q:['meta[content$=".webm"]', '#webmsource', 'source[src$=".webm"]']},
+		{r:/(gfycat\.com\/)(gifs\/detail\/|iframe\/)?([a-z]+)/i, s:'https://$1$3', q:['meta[content$=".webm"]', '#webmsource', 'source[src$=".webm"]']},
 		{r:/googleusercontent\.com\/(proxy|gadgets\/proxy.+?(http.+?)&)/, s:function(m) { return m[2] ? decodeURIComponent(m[2]) : m.input.replace(/w\d+-h\d+($|-p)/, 'w0-h0'); }},
 		{r:/(googleusercontent|ggpht)\.com\//, s:function(m, node) { if(contains(m.input, 'webcache.') || node.outerHTML.match(/favicons\?|\b(Ol Rf Ep|Ol Zb ag|Zb HPb|Zb Gtb|Rf Pg|ho PQc|Uk wi hE|go wi Wh|we D0b|Bea)\b/) || matches(node, '.g-hovercard *, a[href*="profile_redirector"] > img')) return ''; return m.input.replace(/\/s\d{2,}-[^\/]+|\/w\d+-h\d+/, '/s0').replace(/=[^\/]+$/, ''); }},
 		{r:/heberger-image\.fr\/images/, q:'#myimg'},
@@ -109,7 +109,7 @@ function loadHosts() {
 		{r:/(images-na\.ssl-images-amazon.com|media-imdb\.com)\/images\/.+?\.jpg/, s:'/V1\\.?_.+?\\.//g', distinct:true},
 		{r:/imgbox\.com\/([a-z0-9]+)$/i, q:'#img', xhr:hostname != 'imgbox.com'},
 		{r:/imgchili\.(net|com)\/show/, q:'#show_image', xhr:true},
-		{r:/(hosturimage\.com|imageontime\.org|imggoo\.com|imgwel\.com|imageboom\.net|imageon\.org|img4ever\.net|imgcandy\.net|imgdevil\.com|imgrun\.net|imgtrial\.com|imgult\.com|img\.yt|picspornfree\.me|pixliv\.com|pixxx\.me|uplimg\.com|xxxscreens\.com|xxxupload\.org)\/img-|imgbb\.net\/v-/, s:function(m) { return m.input.replace(/\/(v-[0-9a-f]+)_.+/, '$1').replace('http://img.yt', 'https://img.yt'); }, q:['img.centred_resized, #image', 'img[src*="/upload/big/"]'], xhr:true, post:'imgContinue=Continue%20to%20image%20...%20'},
+		{r:/(hosturimage\.com|imageontime\.org|imggoo\.com|imgwel\.com|imageboom\.net|imageon\.org|img4ever\.net|imgcandy\.net|imgcredit\.xyz|imgdevil\.com|imgrun\.net|imgtrial\.com|imgult\.com|img\.yt|picspornfree\.me|pixliv\.com|pixxx\.me|uplimg\.com|xxxscreens\.com|xxxupload\.org)\/img-|imgbb\.net\/v-/, s:function(m) { return m.input.replace(/\/(v-[0-9a-f]+)_.+/, '$1').replace('http://img.yt', 'https://img.yt'); }, q:['img.centred_resized, #image', 'img[src*="/upload/big/"]'], xhr:true, post:'imgContinue=Continue%20to%20image%20...%20'},
 		{r:/(foxyimg\.link|imgclick\.net|imgdragon\.com|imgmaid\.net|imgpaying\.com|imageeer\.com|imgdiamond\.com|imgmega\.com|imgsee\.me|imgtrex\.com|imgtiger\.org|pic-maniac\.com|picexposed\.com)\/([a-z0-9]+)/,  q:'img.pic', xhr:true, post:function(m) { return 'op=view&id=' + m[2] + '&pre=1&submit=Continue%20to%20image...'; }},
 		{r:/imgflip\.com\/(i|gif)\/([^\/?#]+)/, s:function(m) { return 'https://i.imgflip.com/' + m[2] + (m[1] == 'i' ? '.jpg' : '.mp4'); }},
 		{r:/imgsen\.se\/upload\//, s:'/small/big/', xhr:!true},
@@ -117,8 +117,8 @@ function loadHosts() {
 		{r:/imgur\.com\/(a|gallery|t\/[a-z0-9_-]+)\/([a-z0-9]+)(#[a-z0-9]+)?/i, s:function(m) { return 'https://imgur.com/' + m[1] + '/' + m[2] + '' + (m[3] || ''); }, g:function(text, url, cb) { var mk = function(o, imgs) { var items = []; if(!o || !imgs) return items; for(var i = 0, len = imgs.length, cur; i < len && (cur = imgs[i]); i++) { var iu = 'https://i.imgur.com/' + cur.hash + cur.ext; if(cur.ext == '.gif' && !(cur.animated === false)) iu = [iu.replace('.gif', '.webm'), iu.replace('.gif', '.mp4'), iu]; items.push({url:iu, desc:cur.title && cur.description ? cur.title + ' - ' + cur.description : (cur.title || cur.description)}); } if(o.is_album && !contains(items[0].desc, o.title)) items.title = o.title; return items; }, m = /(mergeConfig\('gallery',\s*|Imgur\.Album\.getInstance\()(\{[\s\S]+?\})\);/.exec(text), o1 = eval('(' + m[2].replace(/analytics\s*:\s*analytics/, 'analytics:null').replace(/decodeURIComponent\(.+?\)/, 'null') + ')'), o = o1.image || o1.album, imgs = o.is_album ? o.album_images.images : [o]; if(!o.num_images || o.num_images <= imgs.length) return mk(o, imgs); GM_xmlhttpRequest({method:'GET',url:'https://imgur.com/ajaxalbums/getimages/' + o.hash + '/hit.json?all=true',onload:function(res) { var imgs; try { imgs = JSON.parse(res.responseText).data.images; } catch(ex) {} cb(mk(o, imgs)); }}); }, css:'.post > .hover { display:none!important; }'},
 		{r:/imgur\.com\/.+,/i, g:function(text, url) { var hn = /([a-z]{2,}\.)?imgur\.com/.exec(url)[0]; return /.+\/([a-z0-9,]+)/i.exec(url)[1].split(',').map(function(id) { return {url:'https://i.' + hn + '/' + id + '.jpg'}; }); }},
 		{r:/([a-z]{2,}\.)?imgur\.com\/(r\/[a-z]+\/|[a-z0-9]+#)?([a-z0-9]{5,})($|\?|\.([a-z]+))/i, s:function(m, node) { if(/memegen|random|register|search|signin/.test(m.input)) return ''; if(/(i\.([a-z]+\.)?)?imgur\.com\/(a\/|gallery\/)?/.test(node.parentNode.href || node.parentNode.parentNode.href)) return false; var url = 'https://i.' + (m[1] || '').replace('www.', '') + 'imgur.com/' + m[3].replace(/(.{7})[bhm]$/, '$1') + '.' + (m[5] ? m[5].replace(/gifv?/, 'webm') : 'jpg'); return contains(url, '.webm') ? [url, url.replace('.webm', '.mp4'), url.replace('.webm', '.gif')] : url; }},
-		{d:'instagram.com', e:['a[href*="/p/"]', 'a[role="button"][data-reactid*="scontent-"]', 'article div'], s:function(m, node) { var n = closest(node, 'a[href*="/p/"], article'); if(!n) return false; var a = matches(n, 'a[href*="/p/"]') ? n : qs('a[href*="/p/"]', n); return a.href; }, follow:true},
-		{r:/instagr(\.am|am\.com)\/p\//i, s:function(m) { return m.input.substr(0, m.input.lastIndexOf('/')) + '/?__a=1'; }, q:function(text) { var m = JSON.parse(text).media; return m.video_url || m.display_src.replace(/\/[sp]\d+x\d+\//, '/').replace(/\?.+/, ''); }, rect:'div.PhotoGridMediaItem', c:function(text) { return JSON.parse(text).media.caption; } },
+		{d:'instagram.com', e:['a[href*="/p/"]', 'a[role="button"][data-reactid*="scontent-"]', 'article div', 'article div div img'], s:function(m, node) { var n = closest(node, 'a[href*="/p/"], article'); if(!n) return false; var a = matches(n, 'a[href*="/p/"]') ? n : qs('a[href*="/p/"]', n); return a.href; }, follow:true},
+	    {r:/instagr(\.am|am\.com)\/p\//i, s:function(m) { return m.input.substr(0, m.input.lastIndexOf('/')) + '/?__a=1'; }, q:function(text) { var m = JSON.parse(text).graphql.shortcode_media;return m.video_url || m.display_url.replace(/\/[sp]\d+x\d+\//, '/').replace(/\?.+/, ''); }, rect:'div.PhotoGridMediaItem', c:function(text) { var m = JSON.parse(text).graphql.shortcode_media.edge_media_to_caption.edges[0]; if ( m === undefined ) { return "(no caption)"; } return m.node.text; } },
 		{r:/(istoreimg\.com\/i|itmages\.ru\/image\/view)\//, q:'#image'},
 		{d:'kat.cr', r:/confirm\/url\/([^\/]+)/, s:function(m) { return wn.atob(decodeURIComponent(m[1])); }, follow:true},
 		{r:/(lazygirls\.info\/.+_.+?\/[a-z0-9_]+)($|\?)/i, s:'http://www.$1?display=fullsize', q:'img.photo', xhr:hostname != 'www.lazygirls.info'},
@@ -139,12 +139,12 @@ function loadHosts() {
 		{r:/picsee\.net\/([\d\-]+)\/(.+?)\.html/,s:'http://picsee.net/upload/$1/$2'},
 		{r:/picturescream\.com\/\?v=/, q:'#imagen img'},
 		{r:/(picturescream\.[a-z\/]+|imagescream\.com\/img)\/(soft|x)/, q:'a > img[src*="/images/"]'},
-		{r:/pimpandhost\.com\/(image|guest)\//, s:'/small|medium/original/', q:function(text, doc) { return qs('#light-gallery', doc).getAttribute('data-src'); }},
-		{r:/pixhost\.org\/show\//, q:'#show_image', xhr:true},
+		{r:/pimpandhost\.com\/image\/([0-9]+)/, s:'http://pimpandhost.com/image/$1?size=original', q:'img.original'},
+		{r:/pixhost\.org\/show\//, q:'#image', xhr:true},
 		{r:/pixhub\.eu\/images/, q:'.image-show img', xhr:true},
 		{r:/(pixroute|imgspice)\.com\/.+\.html$/, q:'img[id]', xhr:true},
 		{r:/(pixsor\.com|euro-pic\.eu)\/share-([a-z0-9_]+)/i, s:'http://www.$1/image.php?id=$2', xhr:true},
-		{r:/postima?ge?\.org\/image\/\w+/, q:'#main-image'},
+		{r:/postima?ge?\.org\/image\/\w+/, q:['a[href*="dl="]', '#main-image']},
 		{r:/radikal\.ru\/(fp|.+\.html)/, q:function(text) { return text.match(/http:\/\/[a-z0-9]+\.radikal\.ru[a-z0-9\/]+\.(jpg|gif|png)/i)[0]; }},
 		{d:'reddit.com', r:/i\.reddituploads\.com/},
 		{r:/screenlist\.ru\/details/, q:'#picture'},
@@ -154,7 +154,7 @@ function loadHosts() {
 		{r:/((awsmpic|damimage|imagedecode|imghit|ocaload|swoopic)\.com|(imgflash|imgproof|imgserve|imgget)\.net|(dragimage|gogoimage|imgspot|imgstudio|madimage)\.org|imgs\.it|image\.re)\/img-/, q:'img.centred_resized, img.centred', xhr:true},
 		{r:/turboimagehost\.com\/p\//, q:'#imageid', xhr:true},
 		{r:/twimg.+\/profile_images/i, s:'/_(reasonably_small|normal|bigger|\d+x\d+)\\././g'},
-		{r:/([a-z0-9]+\.twimg\.com\/media\/[a-z0-9_-]+\.(jpe?g|png|gif))/i, s:'https://$1:orig', rect:'div.tweet a.twitter-timeline-link, div.TwitterPhoto-media'},
+		{r:/([a-z0-9-]+\.twimg\.com\/media\/[a-z0-9_-]+\.(jpe?g|png|gif))/i, s:'https://$1:orig', rect:'div.tweet a.twitter-timeline-link, div.TwitterPhoto-media'},
 		{d:'tumblr.com',  e:'div.photo_stage_img, div.photo_stage > canvas', s:function(m, node) { return /http[^"]+/.exec(node.style.cssText + node.getAttribute('data-img-src'))[0]; }, follow:true},
 		{r:/tumblr\.com.+_500\.jpg/, s:['/_500/_1280/', '']},
 		{r:/twimg\.com\/1\/proxy.+?t=(.+?)[&_]/i, s:function(m) { return wn.atob(m[1]).match(/http.+/); }},
@@ -220,10 +220,8 @@ function onMouseMove(e) {
 	if(!_.zoomed && !_.cr) return deactivate();
 	if(_.zoom) {
 		placePopup();
-		if(!cfg.cursor) {
-			var bx = _.view.width/6, by = _.view.height/6;
-			setStatus('edge', _.cx < bx || _.cx > _.view.width - bx || _.cy < by || _.cy > _.view.height - by ? 'add' : 'remove');
-		}
+		var bx = _.view.width/6, by = _.view.height/6;
+		setStatus('edge', _.cx < bx || _.cx > _.view.width - bx || _.cy < by || _.cy > _.view.height - by ? 'add' : 'remove');
 	}
 }
 
@@ -512,19 +510,7 @@ function activate(node, force) {
 	if(_.node) deactivate();
 	_ = info;
 	_.view = viewRect();
-	_.style = addStyle('\
-		#mpiv-bar { position:fixed;z-index:2147483647;left:0;right:0;top:0;transform:scaleY(0);-webkit-transform:scaleY(0);transform-origin:top;-webkit-transform-origin:top;transition:transform 500ms ease 1000ms;-webkit-transition:-webkit-transform 500ms ease 1000ms;text-align:center;font-family:sans-serif;font-size:15px;font-weight:bold;background:rgba(0, 0, 0, 0.6);color:white;padding:4px 10px; }\
-		#mpiv-bar.mpiv-show { transform:scaleY(1);-webkit-transform:scaleY(1); }\
-		#mpiv-popup { display:none;border:1px solid gray;box-sizing:content-box;background-color:white;position:fixed;z-index:2147483647;margin:0;max-width:none;max-height:none;will-change:display,width,height,left,top;cursor:' + (cfg.cursor ? 'default' : 'none') + '; }\
-		#mpiv-popup.mpiv-show { display:inline; }\
-		#YTLT-preview, body > div.tipsy { display:none!important; }\
-		.mpiv-loading:not(.mpiv-preloading) * { cursor:wait!important; }\
-		.mpiv-edge #mpiv-popup { cursor:default; }\
-		.mpiv-error * { cursor:not-allowed!important; }\
-		.mpiv-ready *, .mpiv-large * { cursor:zoom-in!important; cursor:-webkit-zoom-in!important; }\
-		.mpiv-shift * { cursor:default!important; }' +
-		(contains(cfg.css, '{') ? cfg.css : '#mpiv-popup {' + cfg.css + '}') +
-		(_.css ? _.css : ''));
+	if(cfg.css || _.css) _.style = addStyle((contains(cfg.css, '{') ? cfg.css : '#mpiv-popup {' + cfg.css + '}') + (_.css ? _.css : ''));
 	_.zooming = contains(cfg.css, 'mpiv-zooming');
 	[_.node.parentNode, _.node, _.node.firstElementChild].some(function(n) {
 			if(n && n.title && n.title != n.textContent && !contains(d.title, n.title) && !/^http\S+$/.test(n.title)) {
@@ -1150,7 +1136,6 @@ function setup() {
 		cfg.start = $('start-context').selected ? 'context' : ($('start-ctrl').selected ? 'ctrl' : 'auto');
 		cfg.zoom = $('zoom-context').selected ? 'context' : ($('zoom-wheel').selected ? 'wheel' : ($('zoom-shift').selected ? 'shift' : 'auto'));
 		cfg.center = $('center').checked;
-		cfg.cursor = !$('cursor').checked;
 		cfg.imgtab = $('imgtab').checked;
 		cfg.close = $('close').selected;
 		cfg.preload = $('preload').checked;
@@ -1192,7 +1177,7 @@ function setup() {
 			<div><a href="http://w9p.co/userscripts/mpiv/">Mouseover Popup Image Viewer</a><span style="float:right"><a href="#" id="mpiv-import">Import</a> | <a href="#" id="mpiv-export">Export</a></span></div><ul>\
 			<li>Popup: <select><option id="mpiv-start-auto">automatically</option><option id="mpiv-start-context">right click or ctrl</option><option id="mpiv-start-ctrl">ctrl</option></select> <span>after <input id="mpiv-delay" type="text"/> ms</span> <span><input type="checkbox" id="mpiv-preload"/> Start loading immediately</span></li>\
 			<li>Only show popup over scaled-down image when natural size is <input id="mpiv-scale" type="text"/> times larger</li>\
-			<li><input type="checkbox" id="mpiv-center"/> Always centered <input type="checkbox" id="mpiv-cursor"/> Autohide cursor <input type="checkbox" id="mpiv-imgtab"/> Run in image tabs <input type="checkbox" id="mpiv-xhr" onclick="return this.checked || confirm(\'Do not disable this unless you spoof the HTTP headers yourself.\')"/> Anti-hotlinking workaround</li>\
+			<li><input type="checkbox" id="mpiv-center"/> Always centered <input type="checkbox" id="mpiv-imgtab"/> Run in image tabs <input type="checkbox" id="mpiv-xhr" onclick="return this.checked || confirm(\'Do not disable this unless you spoof the HTTP headers yourself.\')"/> Anti-hotlinking workaround</li>\
 			<li>Zoom: <select id="mpiv-zoom"><option id="mpiv-zoom-context">right click or shift</option><option id="mpiv-zoom-wheel">wheel up or shift</option><option id="mpiv-zoom-shift">shift</option><option id="mpiv-zoom-auto">automatically</option></select> Custom scale factors: <input type="text" id="mpiv-scales" placeholder="e.g. 0 0.5 1* 2"/> <span title="values smaller than non-zoomed size are ignored, 0 = fit to window, 0! = same as 0 but also removes smaller values, asterisk after value marks default zoom factor (e.g. 1*)" style="cursor:help">(?)</span></li>\
 			<li>If zooming out further is not possible, <select><option>stay in zoom mode</option><option id="mpiv-close">close popup</option></select></li>\
 			<li><a href="http://w9p.co/userscripts/mpiv/css.html" target="_blank">Custom CSS:</a><div><textarea id="mpiv-css" spellcheck="false"></textarea></li>\
@@ -1236,7 +1221,6 @@ function setup() {
 		$('delay').value = cfg.delay;
 		$('scale').value = cfg.scale;
 		$('center').checked = cfg.center;
-		$('cursor').checked = !cfg.cursor;
 		$('imgtab').checked = cfg.imgtab;
 		$('close').selected = cfg.close;
 		$('preload').checked = cfg.preload;
@@ -1254,6 +1238,16 @@ function setup() {
 	init(loadCfg());
 }
 
+addStyle('\
+	#mpiv-bar { position:fixed;z-index:2147483647;left:0;right:0;top:0;transform:scaleY(0);-webkit-transform:scaleY(0);transform-origin:top;-webkit-transform-origin:top;transition:transform 500ms ease 1000ms;-webkit-transition:-webkit-transform 500ms ease 1000ms;text-align:center;font-family:sans-serif;font-size:15px;font-weight:bold;background:rgba(0, 0, 0, 0.6);color:white;padding:4px 10px; }\
+	#mpiv-bar.mpiv-show { transform:scaleY(1);-webkit-transform:scaleY(1); }\
+	#mpiv-popup.mpiv-show { display:inline; }\
+	#mpiv-popup { display:none;border:1px solid gray;box-sizing:content-box;background-color:white;position:fixed;z-index:2147483647;margin:0;max-width:none;max-height:none;will-change:display,width,height,left,top;cursor:none; }\
+	.mpiv-loading:not(.mpiv-preloading) * { cursor:wait!important; }\
+	.mpiv-edge #mpiv-popup { cursor:default; }\
+	.mpiv-error * { cursor:not-allowed!important; }\
+	.mpiv-ready *, .mpiv-large * { cursor:zoom-in!important; cursor:-webkit-zoom-in!important; }\
+	.mpiv-shift * { cursor:default!important; }');
 on(d, 'mouseover', onMouseOver);
 if(contains(hostname, 'google')) {
 	var node = d.getElementById('main');

@@ -2,19 +2,19 @@
 // @name            MediaViewer
 // @namespace       mahadi22
 // @author          mahadi22
-// @version         0.2.9
+// @version         0.2.11
 // @description     Shows larger version of image, also support HTML5 video.
 // @homepage        https://github.com/Tanakar65/MediaViewer
-// @downloadURL		https://github.com/Tanakar65/MediaViewer/raw/main/MediaViewer.user.js
-// @icon            https://github.com/Tanakar65/MediaViewer/main/favicon.ico
-// @license			https://www.gnu.org/licenses/
-// @include     	http*
-// @grant       	GM_getValue
-// @grant       	GM_setValue
-// @grant       	GM_xmlhttpRequest
-// @grant       	GM_openInTab
-// @grant      		GM_registerMenuCommand
-// @grant       	GM_setClipboard
+// @downloadURL     https://github.com/Tanakar65/MediaViewer/raw/main/MediaViewer.user.js
+// @icon            https://raw.githubusercontent.com/Tanakar65/MediaViewer/main/favicon.ico
+// @license         https://www.gnu.org/licenses/
+// @include         http*
+// @grant           GM_getValue
+// @grant           GM_setValue
+// @grant           GM_xmlhttpRequest
+// @grant           GM_openInTab
+// @grant           GM_registerMenuCommand
+// @grant           GM_setClipboard
 // ==/UserScript==
 
 'use strict';

@@ -2,7 +2,7 @@
 // @name            MediaViewer
 // @namespace       mahadi22
 // @author          mahadi22
-// @version         0.4.5
+// @version         0.5.1
 // @description     Shows larger version of image, also support HTML5 video.
 // @homepage        https://github.com/Tanakar65/MediaViewer
 // @downloadURL     https://github.com/Tanakar65/MediaViewer/raw/main/MediaViewer.user.js
@@ -65,7 +65,7 @@ function loadHosts() {
 		{r:/500px\.com\/photo\//, q:'.the_photo'},
 		{r:/attachment\.php.+attachmentid/},
 		{r:/abload\.de\/image/, q:'#image'},
-		{r:/(ecx\.images-amazon\.com\/images\/I\/.+?)\./, s:'http://$1.jpg', css:'#zoomWindow{display:none}'},
+		{r:/(https?:\/\/[\.a-z-]+amazon\.com\/images\/I\/.+?)\./, s:'$1.jpg', css:'#zoomWindow{display:none}'},
 		{r:/depic\.me\/[0-9a-z]{8,}/, q:'#pic'},
 		{r:/deviantart\.com\/art\//, s:function(m, node) { return /\b(film|lit)/.test(node.className) || /in Flash/.test(node.title) ? '' : m.input; }, q:['#download-button[href*=".jpg"], #download-button[href*=".gif"], #download-button[href*=".png"], #gmi-ResViewSizer_fullimg', 'img.dev-content-full']},
 		{r:/disqus\.com/, s:''},
@@ -78,9 +78,9 @@ function loadHosts() {
 		{r:/fbcdn.+?[0-9]+_([0-9]+)_[0-9]+_[a-z]\.(jpg|png)/, s:function(m, node) { try { if(/[\.^]facebook\.com$/.test(location.hostname)) return unsafeWindow.PhotoSnowlift.getInstance().stream.cache.image[m[1]].url; } catch(ex) {} return false; }, manual:true},
 		{r:/(https?:\/\/(fbcdn-[\w\.\-]+akamaihd|[\w\.\-]+?fbcdn)\.net\/[\w\/\.\-]+?)_[a-z]\.(jpg|png)/, s:function(m, node) { if(node.id == 'fbPhotoImage') { var a = d.body.querySelector('a.fbPhotosPhotoActionsItem[href$="dl=1"]'); if(a) { return a.href.indexOf(m.input.match(/[0-9]+_[0-9]+_[0-9]+/)[0]) > -1 ? '' : a.href; } } if(node.parentNode.outerHTML.indexOf('/hovercard/') > -1) return ''; var gp = node.parentNode.parentNode; if(node.outerHTML.indexOf('profile') > 1 && gp.href && gp.href.indexOf('/photo') > -1) return false; return m[1].replace(/\/[spc][\d\.x]+/g, '').replace('/v/', '/') + '_n.' + m[3]; }, rect:'.photoWrap'},
 		{r:/firepic\.org\/\?v=/, q:'.well img[src*="firepic.org"]'},
-		{r:/flickr\.com\/photos\/([0-9]+@N[0-9]+|[a-z0-9_\-]+)\/([0-9]+)/, s:'http://www.flickr.com/photos/$1/$2/sizes/l/', q:'#allsizes-photo > img'},
+		{r:/flickr\.com\/photos\/([0-9]+@N[0-9]+|[a-z0-9_\-]+)\/([0-9]+)/, s:'https://www.flickr.com/photos/$1/$2/sizes/o/', q:'#allsizes-photo > img'},
 		{r:/gifbin\.com\/.+\.gif/, xhr:true},
-		{r:/(gfycat\.com\/[a-z]+)/i, s:'http://$1', q:'#webmsource'},
+		{r:/(gfycat\.com\/)(iframe\/)?([a-z]+)/i, s:'https://$1$3', q:'#webmsource'},
 		{r:/googleusercontent\.com\/(proxy|gadgets\/proxy.+?(http.+?)&)/, s:function(m, node) { return m[2] ? decodeURIComponent(m[2]) : m.input.replace(/w\d+-h\d+-p/, '-o'); }},
 		{r:/(googleusercontent|ggpht)\.com\//, s:function(m, node) { if(node.outerHTML.match(/favicons\?|\b(Ol Rf Ep|Ol Zb ag|Zb HPb|Zb Gtb|Rf Pg|ho PQc|Uk wi hE)\b/) || matches(node, '.g-hovercard *, a[href*="profile_redirector"] > img')) return ''; return m.input.replace(/\/(s\d{2,}([ckno\-]*?|-fcrop[^\/]+)|w\d+-h\d+(-[po])?)\//g, '/s0/'); }},
 		{r:/heberger-image\.fr\/images/, q:'#myimg'},
@@ -106,8 +106,8 @@ function loadHosts() {
 		{r:/imgpaying\.com\/([a-z0-9]+)\/.+html$/, q:'img.pic', xhr:true, post:function(m) { return 'op=view&id=' + m[1] + '&pre=1&submit=Continue%20to%20image...'; }},
 		{r:/imgrill\.com\/upload\//, s:'/small/big/', xhr:true},
 		{r:/imgtheif\.com\/image\//, q:'a > img[src*="/pictures/"]'},
-		{r:/imgur\.com\/(a|gallery)\/([a-z0-9]+)/i, s:function(m, node) { return 'http://' + m[0] + (m[1] == 'a' ? '/noscript' : ''); }, g:{entry:'div.album-image, #image-container > div.image, #image > div.image', image:'img', caption:['h2', 'div.description'], title:'meta[name="twitter:title"]', fix:function(s) { return s.replace(/([^\/]{7})h\.(gif|jpg|png)$/, '$1.$2').replace(/^imgur.*| - Imgur$/, '');}}, css:'.post > .hover { display:none!important; }'},
-		{r:/imgur\.com\/(r\/[a-z]+\/|[a-z0-9]+#)?([a-z0-9]{5,})b?($|\?|\.)/i, s:function(m, node) { if(/memegen|random|register|signin/.test(m.input)) return ''; return /imgur\.com\/(a|gallery)\//.test(node.parentNode.href) ? false : 'http://i.imgur.com/' + m[2] + '.jpg'; }},
+		{r:/imgur\.com\/(a|gallery)\/([a-z0-9]+)(#[a-z0-9]+)?/i, s:function(m, node) { return 'https://imgur.com/' + m[1] + '/' + m[2] + (m[1] == 'a' ? '/noscript' : '') + (m[3] || ''); }, g:{entry:'div.album-image, #image-container > div.image, #image > div.image', image:'img', caption:['h2', 'div.description'], title:'meta[name="twitter:title"]', fix:function(s, isURL) { return isURL ? s.replace('http:', 'https:').replace(/([^\/]{7})h\.(gif|jpg|png)$/, '$1.$2') : s.replace(/^imgur.*| - Imgur$/, '');}}, css:'.post > .hover { display:none!important; }'},
+		{r:/imgur\.com\/(r\/[a-z]+\/|[a-z0-9]+#)?([a-z0-9]{5,})b?($|\?|\.)/i, s:function(m, node) { if(/memegen|random|register|signin/.test(m.input)) return ''; return /(i\.)?imgur\.com\/(a\/|gallery\/)?/.test(node.parentNode.href) ? false : 'https://i.imgur.com/' + m[2] + '.jpg'; }},
 		{r:/((in|web\.)stagr(\.am|am\.com)|websta\.me)\/p\//i, q:['meta[property="og:video"]', 'div.jp-jplayer', 'span.size > a[href$=".mp4"]:last-of-type', 'meta[property="og:image"]']},
 		{r:/(istoreimg\.com\/i|itmages\.ru\/image\/view)\//, q:'#image'},
 		{r:/(lazygirls\.info\/.+_.+?\/[a-z0-9_]+)($|\?)/i, s:'http://www.$1?display=fullsize', q:'img.photo', xhr:location.hostname != 'www.lazygirls.info'},
@@ -118,8 +118,8 @@ function loadHosts() {
 		{r:/mediacru\.sh\/[a-z0-9_-]+($|\/direct)/i, q:'div.media img, source[src$="webm"]'},
 		{r:/modelmayhem\.com\/photos\//, s:'/_m//'},
 		{r:/modelmayhem\.com\/avatars\//, s:'/_t/_m/'},
-		{r:/(min\.us|minus\.com)\/(i\/|l)([a-z0-9]+)$/i, s:'http://i.min.us/i$3.jpg'},
-		{r:/(min\.us|minus\.com)\/m[a-z0-9]+$/i, g:function(text) { var m = /gallerydata = ({[\w\W]+?});/.exec(text), o = JSON.parse(m[1]), items = []; items.title = o.name; for(var i = 0, len = o.items.length, cur; i < len && (cur = o.items[i]); i++) { items.push({url:'http://i.min\.us/i' + cur.id + '.jpg', desc:cur.caption}); }; return items; }},
+		{r:/(min\.us|minus\.com)\/(i\/|l)([a-z0-9]+)$/i, s:'https://i.minus.com/i$3.jpg'},
+		{r:/(min\.us|minus\.com)\/m[a-z0-9]+$/i, g:function(text) { var m = /gallerydata = ({[\w\W]+?});/.exec(text), o = JSON.parse(m[1]), items = []; items.title = o.name; for(var i = 0, len = o.items.length, cur; i < len && (cur = o.items[i]); i++) { items.push({url:'https://i.minus.com/i' + cur.id + '.jpg', desc:cur.caption}); }; return items; }},
 		{r:/(panoramio\.com\/.*?photo(\/|_id=)|google\.com\/mw-panoramio\/photos\/[a-z]+\/)(\d+)/, s:'http://static.panoramio.com/photos/original/$3.jpg'},
 		{r:/(\d+\.photobucket\.com\/.+\/)(\?[a-z=&]+=)?(.+\.(jpe?g|png|gif))/, s:'http://i$1$3', xhr:location.hostname.indexOf('photobucket.com') < 0},
 		{r:/(photosex\.biz|posteram\.ru)\/.+?id=/i, q:'img[src*="/pic_b/"]', xhr:true},
@@ -139,18 +139,18 @@ function loadHosts() {
 		{r:/sharenxs\.com\/.+original$/, q:'img.view_photo', xhr:true},
 		{r:/sharenxs\.com\/(gallery|view)\//, q:'a[href$="original"]', follow:true},
 		{r:/sndcdn\.com.+/, s:function(m, node) { return node.width == 40 && navigator.userAgent.indexOf('WebKit') > -1 || /commentBubble|commentItem|carouselItem/.test(node.className + node.parentNode.className) ? '' : m.input.replace(/large|t[0-9]+x[0-9]+/, 't500x500'); }},
-		{h:'startpage', r:/\boiu=(.+)/, s:'$1'},
+		{d:'startpage', r:/\boiu=(.+)/, s:'$1'},
 		{r:/stooorage\.com\/show\//, q:'#page_body div div img', xhr:true},
 		{r:/(swoopic\.com|(imgproof|imgserve)\.net)\/img-/, q:'img.centred_resized, img.centred', xhr:true},
 		{r:/turboimagehost\.com\/p\//, q:'#imageid', xhr:true},
 		{r:/twimg.+\/profile_images/i, s:'/_(reasonably_small|normal|bigger|\d+x\d+)\\././g'},
 		{r:/([a-z0-9]+\.twimg\.com\/media\/[a-z0-9_-]+\.(jpe?g|png|gif))/i, s:'https://$1:large', rect:'div.tweet a.twitter-timeline-link, div.TwitterPhoto-media'},
 		{d:'tumblr.com',  e:'div.photo_stage_img, div.photo_stage > canvas', s:function(m, node) { return /http[^"]+/.exec(node.style.cssText + node.getAttribute('data-img-src'))[0]; }, follow:true},
-		{r:/tumblr\.com.+_500\.jpg/, s:'/_500/_1280/'},
+		{r:/tumblr\.com.+_500\.jpg/, s:['/_500/_1280/', '']},
 		{r:/twimg\.com\/1\/proxy.+?t=(.+?)[&_]/i, s:function(m) { return wn.atob(m[1]).match(/http.+/); }},
 		{r:/pic\.twitter\.com\/[a-z0-9]+/i, q:function(text) { return text.match(/https?:\/\/twitter\.com\/[^\/]+\/status\/\d+\/photo\/\d+/i)[0]; }, follow:true},
 		{d:'tweetdeck.twitter.com', e:'a.media-item', s:function(m, node) { return /http[^\)]+/.exec(node.style.backgroundImage)[0]; }, follow:true},
-		{r:/twitpic\.com(\/show\/[a-z]+)?\/([a-z0-9]+)($|#)/i, s:'http://twitpic.com/show/large/$2'},
+		{r:/twitpic\.com(\/show\/[a-z]+)?\/([a-z0-9]+)($|#)/i, s:'https://twitpic.com/show/large/$2'},
 		{r:/twitter\.com\/.+\/status\/.+\/photo\//, q:'.media img, video.animated-gif', follow:function(url) { return !/\.mp4$/.test(url); }},
 		{d:'twitter.com', e:'.grid-tweet > .media-overlay', s:function(m, node) { return node.previousElementSibling.src; }, follow:true},
 		{r:/upix\.me\/files/, s:'/#//'},
@@ -170,11 +170,11 @@ function loadHosts() {
 				var h = JSON.parse(s);
 				if(h.r) h.r = new RegExp(h.r, 'i');
 				if(h.s && h.s.indexOf('return ') > -1) h.s = new Function('m', 'node', h.s);
-				if(h.q && h.q.indexOf('return ') > -1) h.q = new Function('text', h.q);
-				if(h.c && h.c.indexOf('return ') > -1) h.c = new Function('text', h.c);
+				if(h.q && h.q.indexOf('return ') > -1) h.q = new Function('text', 'doc', h.q);
+				if(h.c && h.c.indexOf('return ') > -1) h.c = new Function('text', 'doc', h.c);
 				hosts.splice(0, 0, h);
 			} catch(ex) {
-				showError('Invalid host: ' + s + '\nReason: ' + ex);
+				handleError('Invalid host: ' + s + '\nReason: ' + ex);
 			}
 		}
 	}
@@ -323,9 +323,25 @@ function startGalleryPopup() {
 				throw 'empty';
 			}
 		} catch(ex) {
-			showError('Parsing error: ' + ex);
+			handleError('Parsing error: ' + ex);
 		}
-		if(_.gItems) nextGalleryItem(1);
+		if(_.gItems) {
+			var dir = 1, sel = _.url.split('#')[1];
+			if(sel) {
+				if(/^[0-9]+$/.test(sel)) {
+					dir += parseInt(sel);
+				} else {
+					for(var i = _.gItems.length; i--;) {
+						var url = _.gItems[i].url, file = url.substr(url.lastIndexOf('/') + 1);
+						if(file.indexOf(sel) > -1) {
+							dir += i;
+							break;
+						}
+					}
+				}
+			}
+			nextGalleryItem(dir);
+		}
 	});
 }
 
@@ -333,15 +349,14 @@ function loadGalleryParser(g) {
 	if(typeof g == 'function') return g;
 	if(typeof g == 'string') return new Function('text', g);
 	return function(text, url) {
-		var qE = g.entry, qC = g.caption, qI = g.image, qT = g.title, fix = (typeof g.fix == 'string' ? new Function('s', g.fix) : g.fix) || function(s) { return s.trim(); };
-		var doc = d.implementation.createHTMLDocument('MPIV');
-		doc.documentElement.innerHTML = text;
+		var qE = g.entry, qC = g.caption, qI = g.image, qT = g.title, fix = (typeof g.fix == 'string' ? new Function('s', 'isURL', g.fix) : g.fix) || function(s) { return s.trim(); };
+		var doc = createDoc(text);
 		var nodes = doc.querySelectorAll(qE), items = [];
 		if(!Array.isArray(qC)) qC = [qC];
 		for(var i = 0, node, len = nodes.length; i < len && (node = nodes[i]); i++) {
 			var item = {};
 			try {
-				item.url = fix(findFile(node.querySelector(qI), url));
+				item.url = fix(findFile(node.querySelector(qI), url), true);
 				item.desc = qC.reduce(function(prev, q) {
 					var n = node.querySelector(q);
 					if(!n) {
@@ -361,13 +376,17 @@ function loadGalleryParser(g) {
 }
 
 function nextGalleryItem(dir) {
-	if(dir > 0 && ++_.gIndex >= _.gItems.length)
+	if(dir > 0 && (_.gIndex += dir) >= _.gItems.length)
 		_.gIndex = 0;
-	else if(dir < 0 && --_.gIndex < 0)
+	else if(dir < 0 && (_.gIndex += dir) < 0)
 		_.gIndex = _.gItems.length - 1;
-	var item = _.gItems[_.gIndex];
+	var item = _.gItems[_.gIndex], url = item.url;
+	if(Array.isArray(url)) {
+		_.urls = url;
+		url = url.shift();
+	}
 	setPopup(false);
-	startSinglePopup(item.url);
+	startSinglePopup(url);
 	var c = _.gItems.length > 1 ? '[' + (_.gIndex + 1) + '/' + _.gItems.length + '] ' : '';
 	if(_.gIndex == 0 && _.gItems.title && (!item.desc || item.desc.indexOf(_.gItems.title) < 0)) c += _.gItems.title + (item.desc ? ' - ' : '');
 	if(item.desc) c += item.desc;
@@ -375,6 +394,7 @@ function nextGalleryItem(dir) {
 	var preIdx = _.gIndex + dir;
 	if(_.popup && preIdx >= 0 && preIdx < _.gItems.length) {
 		var preUrl = _.gItems[preIdx].url;
+		if(Array.isArray(preUrl)) preUrl = preUrl.shift();
 		on(_.popup, 'load', function() {
 			var img = d.createElement('img');
 			img.src = preUrl;
@@ -460,7 +480,7 @@ function parseNode(node) {
 }
 
 function findInfo(url, node, noHtml, skipHost) {
-	for(var i = 0, len = hosts.length, tn = tag(node), hostname = location.hostname, h, m, html, u; i < len && (h = hosts[i]); i++) {
+	for(var i = 0, len = hosts.length, tn = tag(node), hostname = location.hostname, h, m, html, urls; i < len && (h = hosts[i]); i++) {
 		if(h.e && !matches(node, h.e) || h == skipHost) continue;
 		if(h.r) {
 			if(h.html && !noHtml && (tn == 'A' || tn == 'IMG' || h.e)) {
@@ -475,13 +495,19 @@ function findInfo(url, node, noHtml, skipHost) {
 			m = url ? /.*/.exec(url) : [];
 		}
 		if(!m || tn == 'IMG' && !h.s) continue;
-		u = 's' in h ? (typeof h.s == 'function' ? h.s(m, node) : decodeURIComponent(replace(h.s, m))) : m.input;
-		if(u === false) continue;
-		if(u) u = decodeURIComponent(u);
-		if((h.follow === true || typeof h.follow == 'function' && h.follow(u)) && !h.q) return findInfo(u, node, false, h);
+		if('s' in h) {
+			urls = (Array.isArray(h.s) ? h.s : [h.s]).map(function(s) { if(typeof s == 'string') return decodeURIComponent(replace(s, m)); if(typeof s == 'function') return s(m, node); return s; });
+			if(Array.isArray(urls[0])) urls = urls[0];
+			if(urls[0] === false) continue;
+			urls = urls.map(function(u) { return u ? decodeURIComponent(u) : u; });
+		} else {
+			urls = [m.input];
+		}
+		if((h.follow === true || typeof h.follow == 'function' && h.follow(urls[0])) && !h.q) return findInfo(urls[0], node, false, h);
 		return {
 			node: node,
-			url: u,
+			url: urls.shift(),
+			urls: urls,
 			r: h.r,
 			q: h.q,
 			c: h.c,
@@ -507,10 +533,10 @@ function downloadPage(url, post, cb) {
 				if(req.status > 399) throw 'Server error: ' + req.status;
 				cb(req.responseText, req.finalUrl || url);
 			} catch(ex) {
-				showError(ex);
+				handleError(ex);
 			}
 		},
-		onerror: showError
+		onerror: handleError
 	};
 	if(post) {
 		opts.method = 'POST';
@@ -546,38 +572,37 @@ function downloadImage(url, referer) {
 				if(u) return setPopup(u.createObjectURL(b));
 				var fr = new FileReader();
 				fr.onload = function() { setPopup(fr.result); };
-				fr.onerror = showError;
+				fr.onerror = handleError;
 				fr.readAsDataURL(b);
 			} catch(ex) {
-				showError(ex);
+				handleError(ex);
 			}
 		},
-		onerror: showError
+		onerror: handleError
 	});
 }
 
 function parsePage(url, q, c, post, cb) {
 	downloadPage(url, post, function(html) {
-		var iurl, cap;
+		var iurl, cap, doc = createDoc(html);
 		if(typeof q == 'function') {
-			iurl = q(html);
+			iurl = q(html, doc);
 		} else {
-			var inode = findNode(q, html);
+			var inode = findNode(q, doc);
 			iurl = inode ? findFile(inode, url) : false;
 		}
 		if(typeof c == 'function') {
-			cap = c(html);
+			cap = c(html, doc);
 		} else {
-			var cnode = findNode(c, html);
+			var cnode = findNode(c, doc);
 			cap = cnode ? findCaption(cnode) : false;
 		}
 		cb(iurl, cap);
 	});
 }
 
-function findNode(q, html) {
-	var node, doc = d.implementation.createHTMLDocument('MPIV');
-	doc.documentElement.innerHTML = html;
+function findNode(q, doc) {
+	var node;
 	if(!Array.isArray(q)) q = [q];
 	for(var i = 0, len = q.length; i < len; i++) {
 		node = doc.querySelector(q[i]);
@@ -608,6 +633,7 @@ function checkProgress(start) {
 	_.nwidth  = p.naturalWidth || p.videoWidth;
 	if(!_.nheight) return;
 	wn.clearInterval(checkProgress.interval);
+	if(_.urls && _.urls.length && Math.max(_.nheight, _.nwidth) < 130) return handleError({type:'error'});
 	setStatus(false);
 	p.clientHeight;
 	p.className = 'mpiv-show';
@@ -677,12 +703,21 @@ function toggleZoom() {
 	return _.zoom;
 }
 
-function showError(o) {
+function handleError(o) {
 	var msg = o.message || (o.readyState ? 'Request failed.' : (o.type == 'error' ? 'File can\'t be displayed.' + (d.querySelector('div[bgactive*="flashblock"]') ? ' Check Flashblock settings.' : '') : o));
 	try {
 		console.log(msg + '\nRegExp: ' + _.r  +'\nURL: ' + _.url);
 	} catch(ex) {}
-	if(_.node) { setStatus('error'); setBar(msg, 'error'); }
+	if(_.urls && _.urls.length) {
+		_.url = _.urls.shift();
+		if(!_.url || _.distinct && existsUnscaled(_.url, _.node.parentNode))
+			deactivate()
+		else
+			startSinglePopup(_.url);
+	} else if(_.node) {
+		setStatus('error');
+		setBar(msg, 'error');
+	}
 }
 
 function setStatus(status) {
@@ -695,7 +730,7 @@ function setPopup(src) {
 	var p = _.popup;
 	if(p) {
 		_.zoom = false;
-		off(p, 'error', showError);
+		off(p, 'error', handleError);
 		p.src = '';
 		rm(p);
 		delete _.popup;
@@ -720,7 +755,7 @@ function setPopup(src) {
 		p = _.popup = d.createElement('img');
 	}
 	p.id = 'mpiv-popup';
-	on(p, 'error', showError);
+	on(p, 'error', handleError);
 	on(p, 'transitionend', function(e) { e.target.classList.remove('mpiv-zooming'); });
 	_.bar ? d.body.insertBefore(p, _.bar) : d.body.appendChild(p);
 	p.src = src;
@@ -833,6 +868,12 @@ function matches(n, q) {
 
 function tag(n) {
 	return n.tagName.toUpperCase();
+}
+
+function createDoc(text) {
+	var doc = d.implementation.createHTMLDocument('MPIV');
+	doc.documentElement.innerHTML = text;
+	return doc;
 }
 
 function rm(n) {

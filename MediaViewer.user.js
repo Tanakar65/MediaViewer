@@ -2,19 +2,19 @@
 // @name            MediaViewer
 // @namespace       mahadi22
 // @author          mahadi22
-// @version         0.2.9
+// @version         0.4.5
 // @description     Shows larger version of image, also support HTML5 video.
 // @homepage        https://github.com/Tanakar65/MediaViewer
-// @downloadURL		https://github.com/Tanakar65/MediaViewer/raw/main/MediaViewer.user.js
-// @icon            https://github.com/Tanakar65/MediaViewer/main/favicon.ico
-// @license			https://www.gnu.org/licenses/
-// @include     	http*
-// @grant       	GM_getValue
-// @grant       	GM_setValue
-// @grant       	GM_xmlhttpRequest
-// @grant       	GM_openInTab
-// @grant      		GM_registerMenuCommand
-// @grant       	GM_setClipboard
+// @downloadURL     https://github.com/Tanakar65/MediaViewer/raw/main/MediaViewer.user.js
+// @icon            https://raw.githubusercontent.com/Tanakar65/MediaViewer/main/favicon.ico
+// @license         https://www.gnu.org/licenses/
+// @include         http*
+// @grant           GM_getValue
+// @grant           GM_setValue
+// @grant           GM_xmlhttpRequest
+// @grant           GM_openInTab
+// @grant           GM_registerMenuCommand
+// @grant           GM_setClipboard
 // ==/UserScript==
 
 'use strict';
@@ -60,6 +60,7 @@ function saveCfg(newCfg) {
 function loadHosts() {
 	var hosts = [
 		/* DO NOT EDIT THE CODE. USE GREASEMONKEY ICON -> USER SCRIPT COMMANDS -> SET UP... */
+		{r:/[\/\?=](https?.+?)(&|$)/, s:'$1', follow:true},
 		{d:'4chan.org', e:'.is_catalog .thread a', q:'.op .fileText a', css:'#post-preview{display:none}'},
 		{r:/500px\.com\/photo\//, q:'.the_photo'},
 		{r:/attachment\.php.+attachmentid/},
@@ -73,15 +74,15 @@ function loadHosts() {
 		{r:/i.ebayimg.com/, s:function(m ,node) { if(node.parentNode.querySelector('.zoom_trigger_mask')) return ''; return m.input.replace(/~~60_\d+/, '~~60_57'); }},
 		{r:/fastpic\.ru\/view\//, q:'#image'},
 		{d:'facebook.com', r:/(fbcdn|fbexternal).*?(app_full_proxy|safe_image).+?(src|url)=(http.+?)[&\"']/, s:function(m, node) { return node.parentNode.className.indexOf('video') > -1 && m[4].indexOf('fbcdn') > -1 ? '' : decodeURIComponent(m[4]); }, html:true},
-		{r:/facebook\.com\/photo/, s:function(m, node) { if(node.id == 'fbPhotoImage') return false; return m.input; }, q:['a.fbPhotosPhotoActionsItem[href$="dl=1"]', '#fbPhotoImage', '#root img', '#root i.img'], rect:'#fbProfileCover'},
-		{r:/fbcdn.+?[0-9]+_([0-9]+)_[0-9]+_[a-z]\.jpg/, s:function(m, node) { try { if(/[\.^]facebook\.com$/.test(location.hostname)) return unsafeWindow.PhotoSnowlift.getInstance().stream.cache.image[m[1]].url; } catch(ex) {} return false; }, manual:true},
-		{r:/(https?:\/\/(fbcdn-[\w\.\-]+akamaihd|[\w\.\-]+?fbcdn)\.net\/[\w\/\.\-]+?)_[a-z]\.jpg/, s:function(m, node) { if(node.id == 'fbPhotoImage') { var a = d.body.querySelector('a.fbPhotosPhotoActionsItem[href$="dl=1"]'); if(a) { return a.href.indexOf(m.input.match(/[0-9]+_[0-9]+_[0-9]+/)[0]) > -1 ? '' : a.href; } } if(node.parentNode.outerHTML.indexOf('/hovercard/') > -1) return ''; var gp = node.parentNode.parentNode; if(node.outerHTML.indexOf('profile') > 1 && gp.href && gp.href.indexOf('/photo') > -1) return false; return m[1].replace(/\/[spc][\d\.x]+/g, '') + '_n.jpg'; }, rect:'.photoWrap'},
+		{r:/facebook\.com\/(photo\.php|[^\/]+\/photos\/)/, s:function(m, node) { if(node.id == 'fbPhotoImage') return false; if(/gradient\.png$/.test(m.input)) return ''; return m.input; }, q:['a.fbPhotosPhotoActionsItem[href$="dl=1"]', '#fbPhotoImage', '#root img', '#root i.img'], rect:'#fbProfileCover'},
+		{r:/fbcdn.+?[0-9]+_([0-9]+)_[0-9]+_[a-z]\.(jpg|png)/, s:function(m, node) { try { if(/[\.^]facebook\.com$/.test(location.hostname)) return unsafeWindow.PhotoSnowlift.getInstance().stream.cache.image[m[1]].url; } catch(ex) {} return false; }, manual:true},
+		{r:/(https?:\/\/(fbcdn-[\w\.\-]+akamaihd|[\w\.\-]+?fbcdn)\.net\/[\w\/\.\-]+?)_[a-z]\.(jpg|png)/, s:function(m, node) { if(node.id == 'fbPhotoImage') { var a = d.body.querySelector('a.fbPhotosPhotoActionsItem[href$="dl=1"]'); if(a) { return a.href.indexOf(m.input.match(/[0-9]+_[0-9]+_[0-9]+/)[0]) > -1 ? '' : a.href; } } if(node.parentNode.outerHTML.indexOf('/hovercard/') > -1) return ''; var gp = node.parentNode.parentNode; if(node.outerHTML.indexOf('profile') > 1 && gp.href && gp.href.indexOf('/photo') > -1) return false; return m[1].replace(/\/[spc][\d\.x]+/g, '').replace('/v/', '/') + '_n.' + m[3]; }, rect:'.photoWrap'},
 		{r:/firepic\.org\/\?v=/, q:'.well img[src*="firepic.org"]'},
 		{r:/flickr\.com\/photos\/([0-9]+@N[0-9]+|[a-z0-9_\-]+)\/([0-9]+)/, s:'http://www.flickr.com/photos/$1/$2/sizes/l/', q:'#allsizes-photo > img'},
 		{r:/gifbin\.com\/.+\.gif/, xhr:true},
 		{r:/(gfycat\.com\/[a-z]+)/i, s:'http://$1', q:'#webmsource'},
-		{r:/googleusercontent\.com\/gadgets\/proxy.+?(http.+?)&/, s:function(m, node) { return decodeURIComponent(m[1]); }},
-		{r:/(googleusercontent|ggpht)\.com\//, s:function(m, node) { if(node.outerHTML.match(/favicons\?|\b(Ol Rf Ep|Ol Zb ag|Zb HPb|Zb Gtb|Rf Pg)\b/) || matches(node, '.g-hovercard *, a[href*="profile_redirector"] > img')) return ''; return m.input.replace(/\/(s\d{2,}[ckno\-]*?|w\d+-h\d+(-[po])?)\//g, '/s0/'); }},
+		{r:/googleusercontent\.com\/(proxy|gadgets\/proxy.+?(http.+?)&)/, s:function(m, node) { return m[2] ? decodeURIComponent(m[2]) : m.input.replace(/w\d+-h\d+-p/, '-o'); }},
+		{r:/(googleusercontent|ggpht)\.com\//, s:function(m, node) { if(node.outerHTML.match(/favicons\?|\b(Ol Rf Ep|Ol Zb ag|Zb HPb|Zb Gtb|Rf Pg|ho PQc|Uk wi hE)\b/) || matches(node, '.g-hovercard *, a[href*="profile_redirector"] > img')) return ''; return m.input.replace(/\/(s\d{2,}([ckno\-]*?|-fcrop[^\/]+)|w\d+-h\d+(-[po])?)\//g, '/s0/'); }},
 		{r:/heberger-image\.fr\/images/, q:'#myimg'},
 		{r:/hostingkartinok\.com\/show-image\.php.*/, q:'.image img'},
 		{r:/imagearn\.com\/image/, q:'#img', xhr:true},
@@ -105,9 +106,9 @@ function loadHosts() {
 		{r:/imgpaying\.com\/([a-z0-9]+)\/.+html$/, q:'img.pic', xhr:true, post:function(m) { return 'op=view&id=' + m[1] + '&pre=1&submit=Continue%20to%20image...'; }},
 		{r:/imgrill\.com\/upload\//, s:'/small/big/', xhr:true},
 		{r:/imgtheif\.com\/image\//, q:'a > img[src*="/pictures/"]'},
-		{r:/imgur\.com\/(a|gallery)\/([a-z0-9]+)/i, s:function(m, node) { return 'http://' + m[0] + (m[1] == 'a' ? '/noscript' : ''); }, g:{entry:'div.album-image, #image-container > div.image, #image > div.image', image:'img', caption:['h2', 'div.description'], title:'meta[name="twitter:title"]', fix:function(s) { return s.replace(/([^\/]{7})h\.(gif|jpg|png)$/, '$1.$2').replace(/^imgur.*| - Imgur$/, '');}}},
-		{r:/imgur\.com\/(r\/[a-z]+\/|[a-z0-9]+#)?([a-z0-9]{5,})b?($|\?|\.)/i, s:'http://i.imgur.com/$2.jpg'},
-		{r:/(in|web\.)stagr(\.am|am\.com)\/p\//i, q:['meta[property="og:video"]', 'span.size > a[href$=".mp4"]:last-of-type', 'meta[property="og:image"]']},
+		{r:/imgur\.com\/(a|gallery)\/([a-z0-9]+)/i, s:function(m, node) { return 'http://' + m[0] + (m[1] == 'a' ? '/noscript' : ''); }, g:{entry:'div.album-image, #image-container > div.image, #image > div.image', image:'img', caption:['h2', 'div.description'], title:'meta[name="twitter:title"]', fix:function(s) { return s.replace(/([^\/]{7})h\.(gif|jpg|png)$/, '$1.$2').replace(/^imgur.*| - Imgur$/, '');}}, css:'.post > .hover { display:none!important; }'},
+		{r:/imgur\.com\/(r\/[a-z]+\/|[a-z0-9]+#)?([a-z0-9]{5,})b?($|\?|\.)/i, s:function(m, node) { if(/memegen|random|register|signin/.test(m.input)) return ''; return /imgur\.com\/(a|gallery)\//.test(node.parentNode.href) ? false : 'http://i.imgur.com/' + m[2] + '.jpg'; }},
+		{r:/((in|web\.)stagr(\.am|am\.com)|websta\.me)\/p\//i, q:['meta[property="og:video"]', 'div.jp-jplayer', 'span.size > a[href$=".mp4"]:last-of-type', 'meta[property="og:image"]']},
 		{r:/(istoreimg\.com\/i|itmages\.ru\/image\/view)\//, q:'#image'},
 		{r:/(lazygirls\.info\/.+_.+?\/[a-z0-9_]+)($|\?)/i, s:'http://www.$1?display=fullsize', q:'img.photo', xhr:location.hostname != 'www.lazygirls.info'},
 		{r:/ld-host\.de\/show/, q:'#image'},
@@ -142,7 +143,7 @@ function loadHosts() {
 		{r:/stooorage\.com\/show\//, q:'#page_body div div img', xhr:true},
 		{r:/(swoopic\.com|(imgproof|imgserve)\.net)\/img-/, q:'img.centred_resized, img.centred', xhr:true},
 		{r:/turboimagehost\.com\/p\//, q:'#imageid', xhr:true},
-		{r:/(([a-z0-9]+\.twimg\.com|twimg.*?\.akamaihd\.net)\/profile_images\/.+)_[a-z]+(\..+)/i, s:'http://$1$3'},
+		{r:/twimg.+\/profile_images/i, s:'/_(reasonably_small|normal|bigger|\d+x\d+)\\././g'},
 		{r:/([a-z0-9]+\.twimg\.com\/media\/[a-z0-9_-]+\.(jpe?g|png|gif))/i, s:'https://$1:large', rect:'div.tweet a.twitter-timeline-link, div.TwitterPhoto-media'},
 		{d:'tumblr.com',  e:'div.photo_stage_img, div.photo_stage > canvas', s:function(m, node) { return /http[^"]+/.exec(node.style.cssText + node.getAttribute('data-img-src'))[0]; }, follow:true},
 		{r:/tumblr\.com.+_500\.jpg/, s:'/_500/_1280/'},
@@ -157,7 +158,7 @@ function loadHosts() {
 		{r:/wiki.+\/thumb\/.+\.(jpe?g|gif|png|svg)\//i, s:'/\\/thumb(?=\\/)|\\/[^\\/]+$//g'},
 		{d:'last', r:/(userserve-ak\.last\.fm\/serve\/).+?(\/\d+)/, s:'http://$1_$2/0.jpg', html:true},
 		{r:/((xxxhost|tinypix)\.me|(xxxces|imgtiger)\.com)\/viewer/, q:['.text_align_center > img', 'img[alt]'], xhr:true},
-		{r:/(i[0-9]+\.ytimg\.com\/vi\/[^\/]+)/, s:'https://$1/0.jpg', rect:'.video-list-item'},
+		{r:/(i[0-9]*\.ytimg\.com\/vi\/[^\/]+)/, s:'https://$1/0.jpg', rect:'.video-list-item'},
 		{r:/\/\/([^\/]+)\/viewer\.php\?file=(.+)/, s:'http://$1/images/$2', xhr:true},
 		{r:/\/albums.+\/thumb_[^\/]/, s:'/thumb_//'},
 		{r:/\/\/[^\/]+[^\?:]+\.(jpe?g?|gif|png|svg|webm)($|\?)/i, distinct:true}
@@ -301,7 +302,7 @@ function startSinglePopup(url) {
 		if(!iurl) throw 'File not found.';
 		_.caption = cap;
 		if(_.follow === true || typeof _.follow == 'function' && _.follow(iurl)) {
-			var info = findInfo([iurl], _.node, true);
+			var info = findInfo(iurl, _.node, true);
 			if(!info || !info.url) throw "Couldn't follow URL: " + iurl;
 			for(var prop in info) _[prop] = info[prop];
 			return startSinglePopup(_.url);
@@ -413,7 +414,7 @@ function activate(node) {
 function deactivate(wait) {
 	wn.clearTimeout(_.timeout);
 	if(_.req && 'abort' in _.req) _.req.abort();
-	if(_.node && _.tooltip) _.node.title = _.tooltip;
+	if(_.tooltip) _.tooltip.node.title = _.tooltip.text;
 	setTitle(true);
 	setStatus(false);
 	setPopup(false);
@@ -434,47 +435,53 @@ function deactivate(wait) {
 }
 
 function parseNode(node) {
-	var img = tag(node) == 'IMG' ? node : false;
-	var url = img && img.src.substr(0, 5) != 'data:' ? rel2abs(img.src, location.href) : false;
-	var info = findInfo([url], node);
-	if(info) return info;
-	var a = tag(node) == 'A' ? node : (tag(node.parentNode) == 'A' ? node.parentNode : (tag(node.parentNode.parentNode) == 'A' ? node.parentNode.parentNode : false));
-	if(a) {
-		if(cfg.thumbsonly && !(img || a.querySelector('i')) && !hasBg(a) && !hasBg(a.parentNode) && !hasBg(a.firstElementChild)) return;
-		url = decodeURIComponent(a.getAttribute('data-expanded-url') || a.getAttribute('data-full-url') || a.getAttribute('data-url') || a.href);
-		var urls;
-		if(url.substr(0, 5) != 'data:') {
-			urls = url.indexOf('//t.co/') > -1 ? ['http://' + a.textContent] : parseUrls(url);
+	var a, img, url, info;
+	if(!hosts) hosts = loadHosts();
+	if(tag(node) == 'A') {
+		a = node;
+	} else {
+		if(tag(node) == 'IMG') {
+			img = node;
+			if(img.src.substr(0, 5) != 'data:') url = rel2abs(img.src, location.href);
 		}
-		info = findInfo(urls, a);
+		info = findInfo(url, node);
+		if(info) return info;
+		a = tag(node.parentNode) == 'A' ? node.parentNode : (tag(node.parentNode.parentNode) == 'A' ? node.parentNode.parentNode : false);
+	}
+	if(a) {
+		if(cfg.thumbsonly && !(img || a.querySelector('i') || a.rel == 'theater') && !hasBg(a) && !hasBg(a.parentNode) && !hasBg(a.firstElementChild)) return;
+		url = a.getAttribute('data-expanded-url') || a.getAttribute('data-full-url') || a.getAttribute('data-url') || a.href;
+		if(url.substr(0, 5) == 'data:') url = false;
+		else if(url.indexOf('//t.co/') > -1) url = 'http://' + a.textContent;
+		info = findInfo(url, a);
 		if(info) return info;
 	}
 	if(img) return {url:img.src, node:img, rect:rect(img), distinct:true};
 }
 
-function findInfo(urls, node, noHtml, skipHost) {
-	if(!hosts) hosts = loadHosts();
-	for(var i = 0, len = hosts.length, tn = tag(node), hostname = location.hostname, h, m, html; i < len && (h = hosts[i]); i++) {
+function findInfo(url, node, noHtml, skipHost) {
+	for(var i = 0, len = hosts.length, tn = tag(node), hostname = location.hostname, h, m, html, u; i < len && (h = hosts[i]); i++) {
 		if(h.e && !matches(node, h.e) || h == skipHost) continue;
 		if(h.r) {
 			if(h.html && !noHtml && (tn == 'A' || tn == 'IMG' || h.e)) {
 				if(!html) html = node.outerHTML;
 				m = h.r.exec(html)
-			} else if(urls) {
-				m = findMatch(urls, h.r);
+			} else if(url) {
+				m = h.r.exec(url);
 			} else {
 				m = null;
 			}
 		} else {
-			m = urls && urls.length ? /.*/.exec(urls[0]) : null;
+			m = url ? /.*/.exec(url) : [];
 		}
 		if(!m || tn == 'IMG' && !h.s) continue;
-		var url = 's' in h ? (typeof h.s == 'function' ? h.s(m, node) : replace(h.s, m)) : m.input;
-		if(url === false) continue;
-		if((h.follow === true || typeof h.follow == 'function' && h.follow(url)) && !h.q) return findInfo([url], node, false, h);
-		var info = {
+		u = 's' in h ? (typeof h.s == 'function' ? h.s(m, node) : decodeURIComponent(replace(h.s, m))) : m.input;
+		if(u === false) continue;
+		if(u) u = decodeURIComponent(u);
+		if((h.follow === true || typeof h.follow == 'function' && h.follow(u)) && !h.q) return findInfo(u, node, false, h);
+		return {
 			node: node,
-			url: url,
+			url: u,
 			r: h.r,
 			q: h.q,
 			c: h.c,
@@ -487,7 +494,6 @@ function findInfo(urls, node, noHtml, skipHost) {
 			distinct: h.distinct,
 			rect: rect(node, h.rect)
 		};
-		return info;
 	};
 }
 
@@ -523,7 +529,7 @@ function downloadImage(url, referer) {
 		headers: {'Accept':'image/png,image/*;q=0.8,*/*;q=0.5','Referer':referer},
 		onprogress: function(e) {
 			if(!bar && Date.now() - start > 3000 && e.loaded/e.total < 0.5) bar = true;
-			if(bar) setBar(parseInt(e.loaded/e.total * 100) + '%', 'xhr');
+			if(bar) setBar(parseInt(e.loaded/e.total * 100) + '% of ' + (e.total/1000000).toFixed(1) + ' MB', 'xhr');
 		},
 		onload: function(req) {
 			try {
@@ -582,7 +588,7 @@ function findNode(q, html) {
 
 function findFile(n, url) {
 	var base = n.ownerDocument.querySelector('base[href]');
-	var path =  n.getAttribute('src') || n.getAttribute('href') || /https?:\/\/[.\/a-z0-9_+%\-]+\.(jpe?g|gif|png|svg|webm|mp4)/i.exec(n.outerHTML) && RegExp.lastMatch;
+	var path =  n.getAttribute('src') || n.getAttribute('data-m4v') || n.getAttribute('href') || /https?:\/\/[.\/a-z0-9_+%\-]+\.(jpe?g|gif|png|svg|webm|mp4)/i.exec(n.outerHTML) && RegExp.lastMatch;
 	return path ? rel2abs(path.trim(), base ? base.getAttribute('href') : url) : false;
 }
 
@@ -618,23 +624,22 @@ function checkProgress(start) {
 		var cur = scales[i] || fit;
 		if(cur > last + 0.05) _.scales.push(last = cur);
 	}
-	placePopup();
-	setTitle();
 	if(!_.bar) {
 		if(_.caption) {
 			setBar(_.caption, 'caption');
 		} else {
-			[_.node, _.node.parentNode, _.node.firstElementChild].some(function(n) {
-				if(n && n.title && n.title != n.textContent && !/^http\S+$/.test(n.title)) {
-					_.tooltip = n.title;
-					setBar(_.tooltip, 'tooltip');
+			[_.node.parentNode, _.node, _.node.firstElementChild].some(function(n) {
+				if(n && n.title && n.title != n.textContent && d.title.indexOf(n.title) < 0 && !/^http\S+$/.test(n.title)) {
+					_.tooltip = {node:n, text:n.title};
+					setBar(_.tooltip.text, 'tooltip');
 					n.title = '';
 					return true;
 				}
 			});
 		}
 	}
-	if(_.tooltip && !_.bar) setBar(_.tooltip, 'tooltip');
+	setTitle();
+	placePopup();
 	if(_.large = _.nwidth > p.clientWidth + _.mbw || _.nheight > p.clientHeight + _.mbh) setStatus('large');
 	if(cfg.imgtab && imgtab || cfg.zoom == 'auto') toggleZoom();
 }
@@ -703,7 +708,7 @@ function setPopup(src) {
 			if(!p.duration || !p.buffered.length || Date.now() - start < 2000) return;
 			var per = parseInt(p.buffered.end(0)/p.duration * 100);
 			if(!bar && per > 0 && per < 50) bar = true;
-			if(bar) setBar(per + '%', 'xhr');
+			if(bar) setBar(per + '% of ' + Math.round(p.duration) + 's', 'xhr');
 		};
 		p = _.popup = d.createElement('video');
 		p.autoplay = true;
@@ -748,21 +753,7 @@ function setTitle(reset) {
 	} else {
 		if(typeof _.title != 'string') _.title = d.title;
 		var p = _.popup;
-		d.title = _.nwidth + 'x' + _.nheight + ' @ ' + Math.round(_.scale * 100) + '%';
-	}
-}
-
-function parseUrls(url) {
-	if(url.substr(0, 4) != 'http' || url.lastIndexOf('http') < 1) return [url];
-	var urls = url.match(/https?:.+?(?=https?:|$)/g) || [];
-	if(urls.length < 2) return urls;
-	return [url].concat(urls.slice(1).map(function(url) { var pos = url.indexOf('&'); return decodeURIComponent(pos < 0 ? url : url.substr(0, pos)); }));
-}
-
-function findMatch(a, re) {
-	for(var i = a.length; i--;) {
-		var m = re.exec(a[i]);
-		if(m) return m;
+		d.title = Math.round(_.scale * 100) + '% - ' + _.nwidth + 'x' + _.nheight;
 	}
 }
 
